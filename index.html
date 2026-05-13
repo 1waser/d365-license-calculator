@@ -1595,7 +1595,7 @@ function dInitGrids() {
           onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
         <label>名 × アプリ</label>
         <input type="number" class="qty-sm" id="dapps-${p.id}" value="1" min="1"
-          onchange="dQty['${p.id}+'_apps']=Math.max(1,parseInt(this.value)||1);dRecalc()">
+          oninput="dRecalc()">
         <label>本</label></div></div>`;
     return `
       <div class="prod-card" id="dcard-${p.id}">
