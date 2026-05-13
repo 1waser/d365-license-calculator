@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamics 365 / Power Platform ライセンス費用計算ツール</title>
+<style>
+:root {
+  --primary: #0078d4;
+  --primary-dark: #005a9e;
+  --primary-light: #eef5fd;
+  --accent: #1a3a5c;
+  --success: #107c10;
+  --success-light: #dff6dd;
+  --warning: #ca5010;
+  --warning-bg: #fff4e5;
+  --danger: #a4262c;
+  --gray-50: #fafafa;
+  --gray-100: #f4f4f4;
+  --gray-200: #e8e8e8;
+  --gray-300: #d0d0d0;
+  --gray-600: #666666;
+  --gray-800: #2d2d2d;
+  --border: #d4d4d4;
+  --shadow: 0 2px 8px rgba(0,0,0,0.09);
+  --radius: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Yu Gothic UI',sans-serif;background:#f2f3f5;color:var(--gray-800);font-size:14px;line-height:1.5}
+
+/* HEADER */
+.app-header{background:linear-gradient(135deg,#1a3a5c 0%,#0d2137 100%);color:#fff;padding:20px 28px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.app-header h1{font-size:22px;font-weight:700;margin-bottom:3px}
+.app-header p{opacity:.85;font-size:13px}
+.header-meta{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
+.header-badge{background:rgba(255,255,255,.18);border-radius:20px;padding:3px 12px;font-size:11px}
+
+/* TABS */
+.tab-bar{background:#fff;border-bottom:2px solid var(--border);display:flex;padding:0 24px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tab-btn{padding:14px 22px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;font-size:14px;font-weight:600;color:var(--gray-600);display:flex;align-items:center;gap:7px;transition:all .2s}
+.tab-btn:hover{color:var(--primary)}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* LAYOUT */
+.page-wrap{max-width:1360px;margin:0 auto;padding:20px 16px}
+.two-col{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+@media(max-width:1050px){.two-col{grid-template-columns:1fr}}
+
+/* CARD */
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.card-header{padding:14px 20px;background:var(--gray-50);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:10px}
+.card-header-icon{font-size:20px}
+.card-header-title{font-size:15px;font-weight:700;flex:1}
+.card-header-sub{font-size:12px;color:var(--gray-600)}
+.card-body{padding:18px 20px}
+
+/* CONTROLS */
+.controls-bar{background:#fff;border-radius:var(--radius);padding:12px 18px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;box-shadow:var(--shadow);margin-bottom:16px}
+.ctrl-group{display:flex;align-items:center;gap:8px}
+.ctrl-group label{font-weight:600;font-size:12px;white-space:nowrap}
+.toggle{position:relative;display:inline-block;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--gray-300);border-radius:24px;cursor:pointer;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle input:checked+.toggle-slider{background:var(--primary)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px)}
+.toggle-lbl{font-size:12px;color:var(--gray-600)}
+input[type=number],select{border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:13px;background:#fff;outline:none;transition:border-color .2s}
+input[type=number]:focus,select:focus{border-color:var(--primary)}
+
+/* SECTION (collapsible in detail tab) */
+.sec{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+.sec-hdr{padding:13px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;border-bottom:1px solid var(--gray-200);background:var(--gray-50)}
+.sec-hdr:hover{background:#f0f2f5}
+.sec-title{font-size:14px;font-weight:700;flex:1}
+.sec-sub{font-size:11px;color:var(--gray-600)}
+.sec-chevron{color:var(--gray-600);transition:transform .2s}
+.sec.collapsed .sec-chevron{transform:rotate(-90deg)}
+.sec-body{padding:14px 18px}
+.sec.collapsed .sec-body{display:none}
+
+/* PRODUCT GRID */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin-top:6px}
+.prod-card{border:1px solid var(--border);border-radius:6px;padding:12px;background:var(--gray-50);transition:border-color .2s,background .2s}
+.prod-card.active{border-color:#7aadcf;background:#f3f8fc}
+.prod-name{font-weight:700;font-size:13px;margin-bottom:4px}
+.prod-price{font-size:12px;color:var(--gray-600);margin-bottom:8px}
+.prod-price strong{color:var(--primary);font-size:14px}
+.prod-note{font-size:11px;color:var(--gray-600);margin-bottom:8px}
+.qty-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.qty-row label{font-size:12px;color:var(--gray-600);white-space:nowrap}
+.qty-in{width:70px}
+.qty-sm{width:58px}
+.cat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin:14px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--primary-light)}
+.cat-lbl:first-child{margin-top:0}
+
+/* GROUP CARD */
+.grp-card{border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:12px;background:var(--gray-50)}
+.grp-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.grp-num{background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.grp-title{font-weight:700;font-size:13px;flex:1}
+.btn-del-grp{background:none;border:none;color:var(--danger);cursor:pointer;font-size:15px;padding:2px 6px;border-radius:4px}
+.btn-del-grp:hover{background:#fde7e9}
+.grp-users-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--gray-200)}
+.grp-users-row label{font-size:13px;font-weight:600}
+.grp-prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.grp-prod-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;transition:border-color .2s}
+.grp-prod-item:hover{border-color:var(--primary)}
+.grp-prod-item.selected{border-color:#7aadcf;background:#f3f8fc}
+.grp-prod-item input[type=checkbox]{accent-color:var(--primary);flex-shrink:0}
+.grp-prod-name{font-size:12px;flex:1}
+.grp-prod-price{font-size:11px;color:var(--gray-600);white-space:nowrap}
+.base-tag{font-size:10px;background:var(--primary);color:#fff;border-radius:3px;padding:1px 5px}
+.attach-tag{font-size:10px;background:#f0f0f0;color:var(--gray-600);border-radius:3px;padding:1px 5px}
+.grp-summary{margin-top:10px;font-size:12px;color:var(--gray-600);background:#fff;border-radius:4px;padding:8px 10px;border:1px solid var(--gray-200)}
+.grp-summary-total{font-weight:700;color:var(--gray-800);font-size:13px}
+.btn-add-grp{display:flex;align-items:center;gap:6px;background:#f5f8fb;color:var(--accent);border:1px dashed #7aadcf;border-radius:6px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;width:100%;justify-content:center;transition:background .2s}
+.btn-add-grp:hover{background:#eaf2f8}
+
+/* RESULT PANEL */
+.result-panel{position:sticky;top:16px}
+.result-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.result-hdr{background:linear-gradient(135deg,#1a3a5c,#0d2137);color:#fff;padding:14px 18px}
+.result-hdr h2{font-size:15px;font-weight:700;margin-bottom:2px}
+.result-hdr p{font-size:12px;opacity:.8}
+.result-body{padding:16px 18px}
+.total-box{background:#f6f9fc;border:1px solid #b8d0e8;border-radius:6px;padding:14px;margin-bottom:14px;text-align:center}
+.total-lbl{font-size:12px;color:var(--gray-600);margin-bottom:4px}
+.total-amt{font-size:28px;font-weight:700;color:var(--accent)}
+.total-sub{font-size:12px;color:var(--gray-600);margin-top:4px}
+.breakdown-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-600);margin-bottom:8px}
+.bk-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--gray-200);font-size:12px}
+.bk-item:last-child{border-bottom:none}
+.bk-name{flex:1;color:var(--gray-800);font-weight:600}
+.bk-detail{font-size:11px;color:var(--gray-600)}
+.bk-cost{font-weight:700;white-space:nowrap;color:var(--gray-800)}
+.bk-empty{text-align:center;color:var(--gray-600);font-size:13px;padding:24px 0}
+.bk-empty-icon{font-size:32px;margin-bottom:8px}
+.annual-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid var(--gray-200);margin-top:6px;font-size:13px;font-weight:700}
+.annual-amt{color:var(--success)}
+
+/* BTN */
+.btn{padding:8px 14px;border-radius:4px;border:none;cursor:pointer;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:var(--gray-100);color:var(--gray-800);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--gray-200)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#0a5f0a}
+.action-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* WARN / INFO */
+.warn-box{background:var(--warning-bg);border:1px solid #f7c9b0;border-radius:4px;padding:7px 10px;font-size:11px;color:var(--warning);margin-top:6px;display:flex;gap:6px}
+.info-box{background:#f5f8fb;border:1px solid #c8daea;border-radius:4px;padding:8px 10px;font-size:11px;color:#2c4a6a;margin-bottom:12px;display:flex;gap:6px;line-height:1.6}
+.disclaimer{font-size:11px;color:var(--gray-600);margin-top:14px;padding-top:10px;border-top:1px solid var(--gray-200);line-height:1.6}
+
+/* ===================== WIZARD TAB ===================== */
+.wizard-wrap{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}
+@media(max-width:1050px){.wizard-wrap{grid-template-columns:1fr}}
+
+/* Scenario input cards */
+.wiz-section{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+.wiz-sec-hdr{padding:13px 18px;background:var(--gray-50);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:10px}
+.wiz-sec-icon{font-size:18px}
+.wiz-sec-title{font-size:14px;font-weight:700}
+.wiz-sec-body{padding:18px 20px}
+
+/* Usage chips / option buttons */
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:flex;align-items:center;gap:6px;padding:8px 14px;border:2px solid var(--border);border-radius:24px;cursor:pointer;font-size:13px;background:#fff;transition:all .2s;user-select:none}
+.chip:hover{border-color:var(--primary);background:var(--primary-light)}
+.chip.selected{border-color:var(--primary);background:var(--primary-light);font-weight:600;color:var(--primary)}
+.chip-icon{font-size:16px}
+
+/* Usage rows (with qty) */
+.usage-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:6px;background:var(--gray-50);margin-bottom:8px;transition:border-color .2s}
+.usage-row.enabled{border-color:#7aadcf;background:#f3f8fc}
+.usage-row-check{accent-color:var(--primary);width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.usage-row-label{flex:1;font-size:13px;cursor:pointer}
+.usage-row-detail{font-size:11px;color:var(--gray-600)}
+.usage-row-qty{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gray-600)}
+.usage-row-qty input{width:65px}
+
+/* User count big input */
+.user-count-wrap{display:flex;align-items:center;gap:14px;margin-top:12px}
+.user-count-input{font-size:28px;font-weight:700;width:100px;text-align:center;border:2px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--primary);outline:none}
+.user-count-input:focus{border-color:var(--primary)}
+.user-count-lbl{font-size:14px;color:var(--gray-600)}
+
+/* Recommendation result panel */
+.rec-panel{position:sticky;top:16px}
+.rec-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.rec-hdr{background:linear-gradient(135deg,#107c10,#0a5f0a);color:#fff;padding:14px 18px}
+.rec-hdr h2{font-size:15px;font-weight:700;margin-bottom:2px}
+.rec-hdr p{font-size:12px;opacity:.8}
+.rec-body{padding:14px 18px}
+
+.rec-item{border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:10px;background:var(--gray-50)}
+.rec-item-hdr{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.rec-item-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.rec-item-name{font-size:13px;font-weight:700;flex:1}
+.rec-item-price{font-size:13px;font-weight:700;color:var(--primary);white-space:nowrap}
+.rec-item-reason{font-size:11px;color:var(--gray-600);line-height:1.5;border-top:1px solid var(--gray-200);margin-top:6px;padding-top:6px}
+.rec-item-qty{font-size:11px;color:var(--gray-600);margin-top:3px}
+
+.rec-empty{text-align:center;color:var(--gray-600);font-size:13px;padding:32px 0}
+.rec-empty-icon{font-size:40px;margin-bottom:10px}
+
+.rec-total-box{background:var(--success-light);border:2px solid var(--success);border-radius:6px;padding:12px;margin-bottom:12px;text-align:center}
+.rec-total-lbl{font-size:12px;color:var(--success);margin-bottom:4px;font-weight:600}
+.rec-total-amt{font-size:26px;font-weight:700;color:var(--success)}
+.rec-total-sub{font-size:11px;color:var(--gray-600);margin-top:3px}
+
+.alt-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-200)}
+.alt-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-600);margin-bottom:8px}
+.alt-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--gray-100)}
+.alt-row:last-child{border:none}
+.alt-row-name{color:var(--gray-600)}
+.alt-row-cost{font-weight:700;color:var(--gray-800)}
+
+/* Transfer button */
+.transfer-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#f5f8fb;color:var(--accent);border:1px solid #7aadcf;border-radius:6px;padding:10px;width:100%;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;transition:background .2s}
+.transfer-btn:hover{background:#eaf2f8}
+
+@media print{.app-header{background:#0078d4!important;-webkit-print-color-adjust:exact}.btn{display:none}.result-panel,.rec-panel{position:static}.two-col,.wizard-wrap{display:block}}
+
+/* ===== Power Apps Diagnosis ===== */
+.pa-diag-body{padding:18px 20px}
+.pa-q-block{margin-bottom:16px}
+.pa-q-label{font-size:13px;font-weight:700;color:var(--gray-800);margin-bottom:8px;display:flex;align-items:flex-start;gap:6px}
+.pa-q-num{background:var(--accent);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.pa-radio-group{display:flex;flex-direction:column;gap:6px}
+.pa-radio{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:#fff;font-size:13px;transition:border-color .2s,background .2s;user-select:none}
+.pa-radio:hover{border-color:#7aadcf;background:#f3f8fc}
+.pa-radio input[type=radio]{accent-color:var(--accent);flex-shrink:0;margin-top:2px;width:15px;height:15px}
+.pa-radio.pa-checked{border-color:#7aadcf;background:#f3f8fc}
+.pa-radio-main{font-weight:600;color:var(--gray-800)}
+.pa-radio-sub{font-size:11px;color:var(--gray-600);margin-top:2px}
+.pa-verdict-ok{background:var(--success-light);border:2px solid var(--success);border-radius:8px;padding:14px 16px;margin-top:14px}
+.pa-verdict-ok .pa-v-title{font-size:14px;font-weight:700;color:var(--success);margin-bottom:6px}
+.pa-verdict-ng{background:#fde7e9;border:2px solid var(--danger);border-radius:8px;padding:14px 16px;margin-top:14px}
+.pa-verdict-ng .pa-v-title{font-size:14px;font-weight:700;color:var(--danger);margin-bottom:6px}
+.pa-verdict-warn{background:var(--warning-bg);border:2px solid var(--warning);border-radius:8px;padding:14px 16px;margin-top:14px}
+.pa-verdict-warn .pa-v-title{font-size:14px;font-weight:700;color:var(--warning);margin-bottom:6px}
+.pa-v-reason{font-size:12px;color:var(--gray-800);line-height:1.7}
+.pa-v-price{font-size:14px;font-weight:700;color:var(--danger);margin-top:8px;padding-top:8px;border-top:1px solid #f7c9c9}
+.pa-v-badge{display:inline-block;border-radius:3px;padding:2px 9px;font-size:11px;font-weight:700;margin-bottom:8px}
+.pa-flow-line{display:flex;align-items:center;gap:0;flex-wrap:wrap;font-size:12px;margin-bottom:10px;background:var(--gray-100);border-radius:6px;padding:8px 10px}
+.pa-flow-item{display:flex;align-items:center;gap:4px}
+.pa-flow-arrow{color:var(--gray-300);margin:0 4px;font-size:14px}
+.pa-flow-active{font-weight:700;color:var(--primary);background:var(--primary-light);border-radius:3px;padding:1px 6px}
+.pa-diag-toggle{cursor:pointer}
+.pa-diag-toggle .toggle-icon{font-size:13px;color:var(--gray-600);transition:transform .2s}
+.pa-diag-toggle.open .toggle-icon{transform:rotate(180deg)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <h1>⚡ Dynamics 365 / Power Platform ライセンス費用計算ツール</h1>
+  <p>業務要件を入力するだけで最適ライセンスを提案。詳細計算での手動確認も可能です。</p>
+  <div class="header-meta">
+    <div class="header-badge">📅 2026年5月 価格情報</div>
+    <div class="header-badge">💱 価格は米ドル (USD) 表示</div>
+    <div class="header-badge">🔒 データはブラウザ内のみで処理</div>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('wizard')">🎯 かんたん診断（ライセンス提案）</button>
+  <button class="tab-btn" onclick="switchTab('detail')">🔢 詳細計算（手動入力）</button>
+</div>
+
+<!-- ===================== TAB 1: WIZARD ===================== -->
+<div id="tab-wizard" class="tab-content active">
+<div class="page-wrap">
+
+  <!-- Controls -->
+  <div class="controls-bar">
+    <div class="ctrl-group">
+      <label>💴 通貨：</label>
+      <span class="toggle-lbl">USD</span>
+      <label class="toggle"><input type="checkbox" id="w_currToggle" onchange="wOnCurrChange()" checked><span class="toggle-slider"></span></label>
+      <span class="toggle-lbl">JPY</span>
+    </div>
+    <div class="ctrl-group" id="w_rateGroup" style="display:flex">
+      <label>$1 =</label>
+      <input type="number" id="w_rate" value="155" min="1" max="300" style="width:90px" onchange="wRefresh()">
+      <label>円</label>
+    </div>
+    <div class="ctrl-group">
+      <label>📅 支払い：</label>
+      <span class="toggle-lbl">年払い</span>
+      <label class="toggle"><input type="checkbox" id="w_monthlyToggle" onchange="wRefresh()"><span class="toggle-slider"></span></label>
+      <span class="toggle-lbl">月払い (+5%)</span>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="wReset()">🔄 リセット</button>
+      <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ 印刷/PDF</button>
+    </div>
+  </div>
+
+  <div class="wizard-wrap">
+  <div>
+
+    <!-- STEP 1: 業務内容と利用人数 -->
+    <div class="wiz-section">
+      <div class="wiz-sec-hdr">
+        <span class="wiz-sec-icon">💼</span>
+        <span class="wiz-sec-title">STEP 1　業務内容と利用人数</span>
+      </div>
+      <div class="wiz-sec-body">
+        <div style="font-size:13px;color:var(--gray-600);margin-bottom:12px">
+          使う業務にチェックを入れ、<strong>その業務を使うユーザー数</strong>を入力してください。<br>
+          <span style="font-size:11px">💡 異なるユーザーが異なる製品を使う場合は、それぞれ別の行で入力します。同じユーザーが複数製品を使う場合は「詳細計算」タブでアタッチ割引を計算できます。</span>
+        </div>
+
+        <!-- Sales -->
+        <div class="usage-row" id="wr_sales">
+          <input type="checkbox" class="usage-row-check" id="w_sales_chk" onchange="wToggleRow('wr_sales',this);wRefresh()">
+          <label for="w_sales_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">📈 営業・商談管理</div>
+            <div class="usage-row-detail">顧客情報・商談・営業活動の管理 → Sales</div>
+          </label>
+          <select id="w_sales_plan" onchange="wRefresh()" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px">
+            <option value="ent">Enterprise $105/名</option>
+            <option value="pro">Professional $65/名</option>
+          </select>
+          <div class="usage-row-qty">
+            <input type="number" id="w_sales_qty" value="" placeholder="人数" min="1" style="width:65px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- Customer Service -->
+        <div class="usage-row" id="wr_cs">
+          <input type="checkbox" class="usage-row-check" id="w_cs_chk" onchange="wToggleRow('wr_cs',this);wRefresh()">
+          <label for="w_cs_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">🎧 カスタマーサポート</div>
+            <div class="usage-row-detail">問い合わせ・ケース管理・顧客対応 → Customer Service</div>
+          </label>
+          <select id="w_cs_plan" onchange="wRefresh()" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px">
+            <option value="ent">Enterprise $105/名</option>
+            <option value="pro">Professional $50/名</option>
+          </select>
+          <div class="usage-row-qty">
+            <input type="number" id="w_cs_qty" value="" placeholder="人数" min="1" style="width:65px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- Field Service -->
+        <div class="usage-row" id="wr_field">
+          <input type="checkbox" class="usage-row-check" id="w_field_chk" onchange="wToggleRow('wr_field',this);wRefresh()">
+          <label for="w_field_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">🔧 現場作業・フィールドサービス</div>
+            <div class="usage-row-detail">設備点検・修理・スケジュール管理 → Field Service $105/名</div>
+          </label>
+          <div class="usage-row-qty">
+            <input type="number" id="w_field_qty" value="" placeholder="人数" min="1" style="width:65px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- Finance -->
+        <div class="usage-row" id="wr_finance">
+          <input type="checkbox" class="usage-row-check" id="w_finance_chk" onchange="wToggleRow('wr_finance',this);wRefresh()">
+          <label for="w_finance_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">💰 財務・経理</div>
+            <div class="usage-row-detail">総勘定元帳・原価計算・財務報告 → Finance $180/名　<span style="color:var(--warning);font-size:11px">※最低20ライセンス</span></div>
+          </label>
+          <div class="usage-row-qty">
+            <input type="number" id="w_finance_qty" value="" placeholder="人数" min="1" style="width:65px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- SCM -->
+        <div class="usage-row" id="wr_scm">
+          <input type="checkbox" class="usage-row-check" id="w_scm_chk" onchange="wToggleRow('wr_scm',this);wRefresh()">
+          <label for="w_scm_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">📦 在庫・サプライチェーン管理</div>
+            <div class="usage-row-detail">在庫・調達・製造・物流 → SCM $180/名　<span style="color:var(--warning);font-size:11px">※最低20ライセンス</span></div>
+          </label>
+          <div class="usage-row-qty">
+            <input type="number" id="w_scm_qty" value="" placeholder="人数" min="1" style="width:65px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- Project Operations -->
+        <div class="usage-row" id="wr_proj">
+          <input type="checkbox" class="usage-row-check" id="w_proj_chk" onchange="wToggleRow('wr_proj',this);wRefresh()">
+          <label for="w_proj_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">📋 プロジェクト管理</div>
+            <div class="usage-row-detail">案件・リソース・時間・コスト管理 → Project Operations $120/名</div>
+          </label>
+          <div class="usage-row-qty">
+            <input type="number" id="w_proj_qty" value="" placeholder="人数" min="1" style="width:65px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- HR -->
+        <div class="usage-row" id="wr_hr">
+          <input type="checkbox" class="usage-row-check" id="w_hr_chk" onchange="wToggleRow('wr_hr',this);wRefresh()">
+          <label for="w_hr_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">🧑‍💼 人事・勤怠管理</div>
+            <div class="usage-row-detail">採用・人材管理・給与・勤怠 → Human Resources $120/名</div>
+          </label>
+          <div class="usage-row-qty">
+            <input type="number" id="w_hr_qty" value="" placeholder="人数" min="1" style="width:65px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- Business Central -->
+        <div class="usage-row" id="wr_bc">
+          <input type="checkbox" class="usage-row-check" id="w_bc_chk" onchange="wToggleRow('wr_bc',this);wRefresh()">
+          <label for="w_bc_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">🏪 中小企業向け会計・ERP</div>
+            <div class="usage-row-detail">財務・在庫・販売・製造の統合管理 → Business Central</div>
+          </label>
+          <select id="w_bc_plan" onchange="wRefresh()" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px">
+            <option value="ess">Essentials $70/名</option>
+            <option value="prem">Premium $100/名</option>
+          </select>
+          <div class="usage-row-qty">
+            <input type="number" id="w_bc_qty" value="" placeholder="人数" min="1" style="width:65px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- STEP 2: 自動化・ツール -->
+    <div class="wiz-section">
+      <div class="wiz-sec-hdr">
+        <span class="wiz-sec-icon">⚙️</span>
+        <span class="wiz-sec-title">STEP 2　自動化・分析・その他ツールの利用</span>
+      </div>
+      <div class="wiz-sec-body">
+        <div style="font-size:13px;color:var(--gray-600);margin-bottom:12px">使いたい機能にチェックを入れてください。数量も設定できます。</div>
+
+        <!-- Power Automate: approval flow -->
+        <div class="usage-row" id="wr_flow_user">
+          <input type="checkbox" class="usage-row-check" id="w_flow_user_chk" onchange="wToggleRow('wr_flow_user',this);wRefresh()">
+          <label for="w_flow_user_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">🔄 業務フロー自動化（承認フロー・通知など）</div>
+            <div class="usage-row-detail">例：申請の承認フロー、メール自動送信 → <strong>Power Automate Premium（ユーザー単位）</strong></div>
+          </label>
+          <div class="usage-row-qty">
+            <label>利用者</label>
+            <input type="number" id="w_flow_user_qty" value="" placeholder="人数" min="1" style="width:60px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- Power Automate: RPA -->
+        <div class="usage-row" id="wr_flow_rpa">
+          <input type="checkbox" class="usage-row-check" id="w_flow_rpa_chk" onchange="wToggleRow('wr_flow_rpa',this);wRefresh()">
+          <label for="w_flow_rpa_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">🤖 無人RPA（夜間バッチ・画面自動操作など）</div>
+            <div class="usage-row-detail">例：夜間に在庫データを自動更新 → <strong>Power Automate Process（フロー単位）</strong></div>
+          </label>
+          <div class="usage-row-qty">
+            <label>フロー数</label>
+            <input type="number" id="w_flow_rpa_qty" value="" placeholder="台数" min="1" style="width:60px" onchange="wRefresh()">
+            <label>本</label>
+          </div>
+        </div>
+
+        <!-- Power Apps -->
+        <div class="usage-row" id="wr_pa">
+          <input type="checkbox" class="usage-row-check" id="w_pa_chk" onchange="wToggleRow('wr_pa',this);wRefresh()">
+          <label for="w_pa_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">📱 カスタム業務アプリ（ノーコード/ローコード）</div>
+            <div class="usage-row-detail">例：現場点検アプリ、受注入力アプリ → <strong>Power Apps Premium</strong></div>
+          </label>
+          <div class="usage-row-qty">
+            <label>利用者</label>
+            <input type="number" id="w_pa_qty" value="" placeholder="人数" min="1" style="width:60px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- Power BI -->
+        <div class="usage-row" id="wr_pbi">
+          <input type="checkbox" class="usage-row-check" id="w_pbi_chk" onchange="wToggleRow('wr_pbi',this);wRefresh()">
+          <label for="w_pbi_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">📊 データ分析・BIダッシュボード</div>
+            <div class="usage-row-detail">例：売上分析、KPIレポート → <strong>Power BI Pro</strong></div>
+          </label>
+          <div class="usage-row-qty">
+            <label>利用者</label>
+            <input type="number" id="w_pbi_qty" value="" placeholder="人数" min="1" style="width:60px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+        <!-- Copilot Studio -->
+        <div class="usage-row" id="wr_copilot">
+          <input type="checkbox" class="usage-row-check" id="w_copilot_chk" onchange="wToggleRow('wr_copilot',this);wRefresh()">
+          <label for="w_copilot_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">🤖 AIチャットボット・エージェント</div>
+            <div class="usage-row-detail">例：社内FAQ Bot、顧客対応Bot → <strong>Copilot Studio</strong>（25,000クレジット/月）</div>
+          </label>
+          <div class="usage-row-qty">
+            <label>クレジットパック</label>
+            <input type="number" id="w_copilot_qty" value="" placeholder="人数" min="1" style="width:50px" onchange="wRefresh()">
+            <label>パック</label>
+          </div>
+        </div>
+
+        <!-- Customer Insights -->
+        <div class="usage-row" id="wr_ci">
+          <input type="checkbox" class="usage-row-check" id="w_ci_chk" onchange="wToggleRow('wr_ci',this);wRefresh()">
+          <label for="w_ci_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">📣 マーケティングメール・SMSの自動配信</div>
+            <div class="usage-row-detail">例：メルマガ・キャンペーンメール → <strong>Customer Insights – Journeys</strong>（テナント単位）</div>
+          </label>
+        </div>
+
+        <!-- Power Pages -->
+        <div class="usage-row" id="wr_pages">
+          <input type="checkbox" class="usage-row-check" id="w_pages_chk" onchange="wToggleRow('wr_pages',this);wRefresh()">
+          <label for="w_pages_chk" style="flex:1;cursor:pointer">
+            <div class="usage-row-label">🌐 顧客向け外部ポータルサイト</div>
+            <div class="usage-row-detail">例：顧客が自分でステータス確認するポータル → <strong>Power Pages</strong></div>
+          </label>
+          <div class="usage-row-qty">
+            <label>外部ユーザー</label>
+            <input type="number" id="w_pages_qty" value="" placeholder="MAU数" min="1" style="width:70px" onchange="wRefresh()">
+            <label>名</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Power Apps ライセンス要否診断 -->
+    <div class="wiz-section" id="pa_diag_section">
+      <div class="wiz-sec-hdr pa-diag-toggle" id="pa_diag_toggle" onclick="togglePaDiag()">
+        <span class="wiz-sec-icon">🔍</span>
+        <div style="flex:1">
+          <div class="wiz-sec-title">Power Apps ライセンス要否診断</div>
+          <div style="font-size:11px;color:var(--gray-600);margin-top:2px">M365・D365の既存ライセンスによっては追加不要な場合があります</div>
+        </div>
+        <span class="toggle-icon">▾</span>
+      </div>
+      <div class="pa-diag-body" id="pa_diag_body" style="display:none">
+        <div class="info-box" style="margin-bottom:16px">
+          ℹ️ <span>条件を選んでいくと、Power Apps の<strong>追加ライセンスが必要かどうか</strong>を自動判定します。選択に応じてリアルタイムで結果が表示されます。</span>
+        </div>
+
+        <!-- Q1: 実行場所 -->
+        <div class="pa-q-block">
+          <div class="pa-q-label"><span class="pa-q-num">1</span>アプリはどこで動かしますか？</div>
+          <div class="pa-radio-group">
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_loc" value="teams" checked>
+              <div><div class="pa-radio-main">Microsoft Teams 内のみ</div><div class="pa-radio-sub">Teams のタブやボットとして埋め込む</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_loc" value="outside">
+              <div><div class="pa-radio-main">Teams 外（ブラウザ・モバイルアプリ等）</div><div class="pa-radio-sub">Power Apps アプリ、スマートフォン、社内ポータル経由など</div></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Q2: アプリの種類 -->
+        <div class="pa-q-block">
+          <div class="pa-q-label"><span class="pa-q-num">2</span>作るアプリの種類は？</div>
+          <div class="pa-radio-group">
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_type" value="canvas" checked>
+              <div><div class="pa-radio-main">キャンバスアプリ</div><div class="pa-radio-sub">自由にレイアウトを組んで作るアプリ（フォーム・一覧など）</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_type" value="model">
+              <div><div class="pa-radio-main">モデル駆動型アプリ</div><div class="pa-radio-sub">Dataverse のデータ構造に基づき自動生成されるアプリ（Dataverse 必須）</div></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Q3: データソース -->
+        <div class="pa-q-block">
+          <div class="pa-q-label"><span class="pa-q-num">3</span>使用するデータソースは？</div>
+          <div class="pa-radio-group">
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_data" value="standard" checked>
+              <div><div class="pa-radio-main">標準コネクタのみ</div><div class="pa-radio-sub">SharePoint・Excel・Teams・OneDrive・Outlook など</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_data" value="dvt">
+              <div><div class="pa-radio-main">Dataverse for Teams（Teams内の簡易DB）</div><div class="pa-radio-sub">Teams 内に限定された軽量版 Dataverse</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_data" value="dv">
+              <div><div class="pa-radio-main">Dataverse（フル版）</div><div class="pa-radio-sub">D365 や Power Platform 共通のクラウドデータベース</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_data" value="premium">
+              <div><div class="pa-radio-main">プレミアムコネクタ</div><div class="pa-radio-sub">SAP・Salesforce・SQL Server・Azure・カスタムAPIなど</div></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Q4: M365 -->
+        <div class="pa-q-block">
+          <div class="pa-q-label"><span class="pa-q-num">4</span>Microsoft 365（M365）ライセンスはありますか？</div>
+          <div class="pa-radio-group">
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_m365" value="none" checked>
+              <div><div class="pa-radio-main">なし</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_m365" value="yes">
+              <div><div class="pa-radio-main">あり</div><div class="pa-radio-sub">M365 Business Basic/Standard/Premium、E1/E3/E5、Teams Essentials など</div></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Q5: D365 -->
+        <div class="pa-q-block">
+          <div class="pa-q-label"><span class="pa-q-num">5</span>Dynamics 365 ライセンスはありますか？</div>
+          <div class="pa-radio-group">
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_d365" value="none" checked>
+              <div><div class="pa-radio-main">なし</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_d365" value="pro">
+              <div><div class="pa-radio-main">あり（Professional 系）</div><div class="pa-radio-sub">Sales Professional・Customer Service Professional など ※シーデッド権なし</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_d365" value="ent">
+              <div><div class="pa-radio-main">あり（Enterprise / Premium 系）</div><div class="pa-radio-sub">Sales Ent・CS Ent・Field Service・Finance・SCM・Project Operations・HR など</div></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Q6: スコープ（D365 Ent のみ表示） -->
+        <div class="pa-q-block" id="pa_scope_block" style="display:none">
+          <div class="pa-q-label"><span class="pa-q-num">6</span>作るアプリは D365 と同じ環境・同じ業務スコープですか？</div>
+          <div style="font-size:11px;color:var(--gray-600);margin:-6px 0 8px 28px">
+            💡 同スコープの例：Sales Enterprise ユーザー向けに、同じ Dataverse 環境内で営業支援アプリを作る<br>
+            ✗ 別スコープの例：Finance ユーザーが使う D365 環境で、まったく無関係の在庫管理アプリを作る
+          </div>
+          <div class="pa-radio-group">
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_scope" value="same" checked>
+              <div><div class="pa-radio-main">はい — 同一環境・関連業務のアプリ</div><div class="pa-radio-sub">D365 の環境内で、その D365 製品に関連するアプリを作る</div></div>
+            </label>
+            <label class="pa-radio" onclick="paDiagChange()">
+              <input type="radio" name="pa_scope" value="diff">
+              <div><div class="pa-radio-main">いいえ — 別の業務や別環境のアプリ</div><div class="pa-radio-sub">D365 とは関係ない業務アプリ、または別の Dataverse 環境を使う</div></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 判定結果 -->
+        <div id="pa_verdict"></div>
+      </div>
+    </div>
+
+    <!-- Azure Link -->
+    <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="font-size:28px;flex-shrink:0">☁️</div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:14px;font-weight:700;color:var(--gray-800);margin-bottom:3px">Azure のコストも確認する</div>
+        <div style="font-size:12px;color:var(--gray-600);line-height:1.6">Dynamics 365 / Power Platform と組み合わせて Azure を利用する場合は、Microsoft 公式の料金計算ツールで見積もりできます。</div>
+      </div>
+      <a href="https://azure.microsoft.com/ja-jp/pricing/calculator/" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border-radius:5px;padding:9px 16px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;transition:opacity .2s"
+         onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        Azure 料金計算ツール →
+      </a>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- RIGHT: Recommendation Panel -->
+  <div class="rec-panel">
+    <div class="rec-card">
+      <div class="rec-hdr">
+        <h2>✅ 推奨ライセンス</h2>
+        <p>入力内容をもとに最適なプランを提案します</p>
+      </div>
+      <div class="rec-body">
+        <div id="wiz_total_box" style="display:none" class="rec-total-box">
+          <div class="rec-total-lbl" id="wiz_total_lbl">月額合計（年払い）</div>
+          <div class="rec-total-amt" id="wiz_total_amt">$0</div>
+          <div class="rec-total-sub" id="wiz_total_sub"></div>
+        </div>
+        <div id="wiz_rec_list">
+          <div class="rec-empty">
+            <div class="rec-empty-icon">🎯</div>
+            <div>業務内容を入力すると<br>最適なライセンスを提案します</div>
+          </div>
+        </div>
+        <div id="wiz_alt" style="display:none" class="alt-section">
+          <div class="alt-title">💡 代替プランとの比較</div>
+          <div id="wiz_alt_list"></div>
+        </div>
+        <div id="wiz_annual_row" style="display:none" class="annual-row">
+          <span>年額合計</span>
+          <span class="annual-amt" id="wiz_annual_amt"></span>
+        </div>
+        <div id="wiz_warnings"></div>
+
+        <button class="transfer-btn" id="wiz_transfer_btn" style="display:none" onclick="transferToDetail()">
+          📋 この内容を「詳細計算」タブに転送する →
+        </button>
+
+        <div class="action-row">
+          <button class="btn btn-secondary btn-sm" onclick="copyWizResult()">📋 結果をコピー</button>
+          <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ 印刷</button>
+        </div>
+        <div style="margin-top:14px;background:#fffbf0;border:1px solid #e8d5a0;border-radius:6px;padding:10px 12px">
+          <div style="font-size:11px;font-weight:700;color:#7a5c00;margin-bottom:4px">📌 ご利用にあたってのご注意</div>
+          <div style="font-size:11px;color:#5a4200;line-height:1.7">
+            本ツールの計算結果は<strong>あくまで参考値</strong>です。価格は製品アップデート・為替変動・契約条件・ボリューム割引・プロモーション等により実際の費用と異なる場合があります。<br>
+            正式な見積もりおよびライセンス要件の最終確認は、マイクロソフト担当者にお問い合わせください。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /rec-panel -->
+
+  </div><!-- /wizard-wrap -->
+</div>
+</div><!-- /tab-wizard -->
+
+
+<!-- ===================== TAB 2: DETAIL ===================== -->
+<div id="tab-detail" class="tab-content">
+<div class="page-wrap">
+
+  <!-- Controls -->
+  <div class="controls-bar">
+    <div class="ctrl-group">
+      <label>💴 通貨：</label>
+      <span class="toggle-lbl">USD</span>
+      <label class="toggle"><input type="checkbox" id="d_currToggle" onchange="dOnCurrChange()" checked><span class="toggle-slider"></span></label>
+      <span class="toggle-lbl">JPY</span>
+    </div>
+    <div class="ctrl-group" id="d_rateGroup" style="display:flex">
+      <label>$1 =</label>
+      <input type="number" id="d_rate" value="155" min="1" max="300" style="width:90px" onchange="dRecalc()">
+      <label>円</label>
+    </div>
+    <div class="ctrl-group">
+      <label>📅 支払い：</label>
+      <span class="toggle-lbl">年払い</span>
+      <label class="toggle"><input type="checkbox" id="d_monthlyToggle" onchange="dRecalc()"><span class="toggle-slider"></span></label>
+      <span class="toggle-lbl">月払い (+5%)</span>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="dReset()">🔄 リセット</button>
+      <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ 印刷/PDF</button>
+    </div>
+  </div>
+
+  <div class="two-col">
+  <div>
+
+    <!-- D365 -->
+    <div class="sec" id="sec-d365">
+      <div class="sec-hdr" onclick="toggleSec('sec-d365')">
+        <span style="font-size:20px">🏢</span>
+        <div><div class="sec-title">Dynamics 365（CRM / ERP）</div>
+        <div class="sec-sub">同じユーザーが複数製品を使う場合はユーザーグループでまとめると自動でアタッチ価格を適用します</div></div>
+        <span class="sec-chevron">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="info-box" style="flex-direction:column;gap:6px">
+          <div style="font-weight:700;font-size:12px">ℹ️ アタッチライセンスとは？</div>
+          <div>
+            同じユーザーが複数の Dynamics 365 製品を使う場合、<strong>最高額の製品がベースライセンス（正規価格）</strong>となり、
+            2つ目以降は<strong>アタッチライセンス（$20〜$30/ユーザー）</strong>という割引価格が適用されます。<br>
+            <span style="margin-top:4px;display:block">
+              💡 例：Sales Enterprise ($105) ＋ CS Enterprise → アタッチ <strong>$20</strong> = 合計 <strong>$125</strong>/ユーザー/月<br>
+              ※ 異なるユーザーが別々の製品を使う場合は、「ユーザーグループを追加」でグループを分けてください。
+            </span>
+          </div>
+        </div>
+        <div id="d_groupContainer"></div>
+        <button class="btn-add-grp" onclick="dAddGroup()">＋ ユーザーグループを追加</button>
+      </div>
+    </div>
+
+    <!-- BC -->
+    <div class="sec" id="sec-bc">
+      <div class="sec-hdr" onclick="toggleSec('sec-bc')">
+        <span style="font-size:20px">📦</span>
+        <div><div class="sec-title">Dynamics 365 Business Central（会計・ERP）</div>
+        <div class="sec-sub">中小企業向け ERP。Essentials・Premium・Team Member の3種。</div></div>
+        <span class="sec-chevron">▾</span>
+      </div>
+      <div class="sec-body"><div class="prod-grid" id="d_grid-bc"></div></div>
+    </div>
+
+    <!-- Power Apps -->
+    <div class="sec" id="sec-pa">
+      <div class="sec-hdr" onclick="toggleSec('sec-pa')">
+        <span style="font-size:20px">📱</span>
+        <div><div class="sec-title">Power Apps</div>
+        <div class="sec-sub">業務アプリをノーコード/ローコードで作成。</div></div>
+        <span class="sec-chevron">▾</span>
+      </div>
+      <div class="sec-body"><div class="prod-grid" id="d_grid-pa"></div></div>
+    </div>
+
+    <!-- Power Automate -->
+    <div class="sec" id="sec-flow">
+      <div class="sec-hdr" onclick="toggleSec('sec-flow')">
+        <span style="font-size:20px">🔄</span>
+        <div><div class="sec-title">Power Automate</div>
+        <div class="sec-sub">業務フロー自動化。ユーザー単位またはフロー（RPA）単位。</div></div>
+        <span class="sec-chevron">▾</span>
+      </div>
+      <div class="sec-body"><div class="prod-grid" id="d_grid-flow"></div></div>
+    </div>
+
+    <!-- Power BI -->
+    <div class="sec" id="sec-pbi">
+      <div class="sec-hdr" onclick="toggleSec('sec-pbi')">
+        <span style="font-size:20px">📊</span>
+        <div><div class="sec-title">Power BI</div>
+        <div class="sec-sub">データ分析・BIレポート。2025年4月より値上げ（Pro: $10→$14）。</div></div>
+        <span class="sec-chevron">▾</span>
+      </div>
+      <div class="sec-body"><div class="prod-grid" id="d_grid-pbi"></div></div>
+    </div>
+
+    <!-- Tenant -->
+    <div class="sec" id="sec-tenant">
+      <div class="sec-hdr" onclick="toggleSec('sec-tenant')">
+        <span style="font-size:20px">🌐</span>
+        <div><div class="sec-title">テナント共通・その他</div>
+        <div class="sec-sub">Customer Insights・Power Pages・Copilot Studio など。テナント/サイト単位課金。</div></div>
+        <span class="sec-chevron">▾</span>
+      </div>
+      <div class="sec-body"><div class="prod-grid" id="d_grid-tenant"></div></div>
+    </div>
+
+  </div><!-- /left col -->
+
+  <!-- Result Panel -->
+  <div class="result-panel">
+    <div class="result-card">
+      <div class="result-hdr">
+        <h2>💰 費用計算結果</h2>
+        <p>製品を追加すると自動で更新されます</p>
+      </div>
+      <div class="result-body">
+        <div class="total-box">
+          <div class="total-lbl" id="d_totalLbl">月額合計（年払い）</div>
+          <div class="total-amt" id="d_totalAmt">$0</div>
+          <div class="total-sub" id="d_totalSub"></div>
+        </div>
+        <div class="breakdown-title">📋 製品別内訳</div>
+        <div id="d_breakdownList">
+          <div class="bk-empty"><div class="bk-empty-icon">🛒</div><div>製品を選択してください</div></div>
+        </div>
+        <div id="d_annualRow" class="annual-row" style="display:none">
+          <span>年額合計</span><span class="annual-amt" id="d_annualAmt"></span>
+        </div>
+        <div id="d_warnings"></div>
+        <div class="action-row">
+          <button class="btn btn-primary btn-sm" onclick="dCopyResult()">📋 コピー</button>
+          <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ 印刷</button>
+        </div>
+        <div style="margin-top:14px;background:#fffbf0;border:1px solid #e8d5a0;border-radius:6px;padding:10px 12px">
+          <div style="font-size:11px;font-weight:700;color:#7a5c00;margin-bottom:4px">📌 ご利用にあたってのご注意</div>
+          <div style="font-size:11px;color:#5a4200;line-height:1.7">
+            本ツールの計算結果は<strong>あくまで参考値</strong>です。価格は製品アップデート・為替変動・契約条件・ボリューム割引・プロモーション等により実際の費用と異なる場合があります。<br>
+            正式な見積もりおよびライセンス要件の最終確認は、マイクロソフト担当者にお問い合わせください。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /two-col -->
+</div>
+</div><!-- /tab-detail -->
+
+<script>
+// =====================================================
+// SHARED PRICING DATA
+// =====================================================
+const D365 = [
+  {id:'sales_pro',    name:'Sales Professional',              price:65,  attach:null, cat:'Sales',               note:''},
+  {id:'sales_ent',    name:'Sales Enterprise',                price:105, attach:20,   cat:'Sales',               note:''},
+  {id:'sales_prem',   name:'Sales Premium',                   price:150, attach:20,   cat:'Sales',               note:'Copilot機能含む'},
+  {id:'cs_pro',       name:'Customer Service Professional',   price:50,  attach:null, cat:'Customer Service',    note:''},
+  {id:'cs_ent',       name:'Customer Service Enterprise',     price:105, attach:20,   cat:'Customer Service',    note:''},
+  {id:'contact_ctr',  name:'Contact Center',                  price:85,  attach:20,   cat:'Customer Service',    note:'2026/6/30まで40%割引適用済価格'},
+  {id:'field_svc',    name:'Field Service',                   price:105, attach:20,   cat:'Field Service',       note:''},
+  {id:'finance',      name:'Finance',                         price:180, attach:30,   cat:'Finance & Operations',note:'最低20ライセンス',minQty:20},
+  {id:'scm',          name:'Supply Chain Management',         price:180, attach:30,   cat:'Finance & Operations',note:'最低20ライセンス',minQty:20},
+  {id:'scm_prem',     name:'Supply Chain Management Premium', price:300, attach:30,   cat:'Finance & Operations',note:'最低20ライセンス',minQty:20},
+  {id:'proj_ops',     name:'Project Operations',              price:120, attach:30,   cat:'Project Operations',  note:''},
+  {id:'commerce',     name:'Commerce',                        price:180, attach:30,   cat:'Commerce',            note:''},
+  {id:'hr',           name:'Human Resources',                 price:120, attach:30,   cat:'Human Resources',     note:''},
+  {id:'remote_assist',name:'Remote Assist',                   price:65,  attach:20,   cat:'Mixed Reality',       note:''},
+  {id:'guides',       name:'Guides',                          price:65,  attach:20,   cat:'Mixed Reality',       note:''},
+];
+const BC = [
+  {id:'bc_ess', name:'Business Central Essentials', price:70,  note:'財務・在庫・販売・購買など基本機能'},
+  {id:'bc_prem',name:'Business Central Premium',    price:100, note:'Essentials ＋ サービス管理・製造'},
+  {id:'bc_team',name:'Business Central Team Member',price:8,   note:'閲覧・承認のみの軽量ユーザー向け'},
+];
+const PA = [
+  {id:'pa_prem',   name:'Power Apps Premium',price:20,unit:'ユーザー/月',    unitKey:'user',    note:'すべてのカスタムアプリ利用可能'},
+  {id:'pa_perapp', name:'Power Apps Per App', price:5, unit:'ユーザー×アプリ/月',unitKey:'user-app',note:'特定のアプリのみ利用する場合'},
+];
+const FLOW = [
+  {id:'flow_prem',name:'Power Automate Premium',price:15, unit:'ユーザー/月',unitKey:'user',note:'クラウドフロー＋RPA（有人）'},
+  {id:'flow_proc',name:'Power Automate Process', price:150,unit:'フロー/月',  unitKey:'flow',note:'無人RPA (Unattended) フロー単位'},
+];
+const PBI = [
+  {id:'pbi_pro',name:'Power BI Pro',             price:14,unit:'ユーザー/月',note:'2025年4月 $10→$14 値上げ'},
+  {id:'pbi_ppu',name:'Power BI Premium Per User',price:24,unit:'ユーザー/月',note:'2025年4月 $20→$24 値上げ'},
+];
+const TENANT = [
+  {id:'ci_combined',name:'Customer Insights（Journeys＋Data）', price:1700,unit:'テナント/月',unitKey:'tenant',note:'D365を10本以上保有でアタッチ割引あり（$500/月）'},
+  {id:'ci_journeys',name:'Customer Insights – Journeys のみ',   price:1000,unit:'テナント/月',unitKey:'tenant',note:'メール・SMS等マーケティングジャーニー'},
+  {id:'pages_auth', name:'Power Pages（認証ユーザー）',          price:200, unit:'100ユーザー×サイト/月',unitKey:'pagesAuth',note:'外部ポータルに認証ログインするユーザー数×サイト数'},
+  {id:'pages_anon', name:'Power Pages（匿名ユーザー）',          price:75,  unit:'1,000セッション×サイト/月',unitKey:'pagesAnon',note:'認証不要の公開ページへのアクセスセッション数'},
+  {id:'copilot',    name:'Copilot Studio',                       price:200, unit:'25,000クレジット/月',unitKey:'credits',note:'2025年9月よりクレジット課金。AIエージェント構築・実行'},
+];
+
+// =====================================================
+// TAB SWITCHING
+// =====================================================
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function toggleSec(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+// =====================================================
+// FORMAT
+// =====================================================
+function fmtW(usd) {
+  const isJPY = document.getElementById('w_currToggle').checked;
+  const rate = parseFloat(document.getElementById('w_rate').value) || 155;
+  if (isJPY) return '¥' + Math.round(usd * rate).toLocaleString();
+  return '$' + usd.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,'،');
+}
+function fmtWi(usd) {
+  const isJPY = document.getElementById('w_currToggle').checked;
+  const rate = parseFloat(document.getElementById('w_rate').value) || 155;
+  if (isJPY) return '¥' + Math.round(usd * rate).toLocaleString();
+  return '$' + Math.round(usd).toLocaleString();
+}
+function fmtD(usd) {
+  const isJPY = document.getElementById('d_currToggle').checked;
+  const rate = parseFloat(document.getElementById('d_rate').value) || 155;
+  if (isJPY) return '¥' + Math.round(usd * rate).toLocaleString();
+  return '$' + usd.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,'،');
+}
+function fmtDi(usd) {
+  const isJPY = document.getElementById('d_currToggle').checked;
+  const rate = parseFloat(document.getElementById('d_rate').value) || 155;
+  if (isJPY) return '¥' + Math.round(usd * rate).toLocaleString();
+  return '$' + Math.round(usd).toLocaleString();
+}
+
+// =====================================================
+// =====================================================
+// WIZARD TAB LOGIC
+// =====================================================
+// =====================================================
+function wOnCurrChange() {
+  const on = document.getElementById('w_currToggle').checked;
+  document.getElementById('w_rateGroup').style.display = on ? 'flex' : 'none';
+  wRefresh();
+}
+
+function wToggleRow(rowId, chk) {
+  document.getElementById(rowId).classList.toggle('enabled', chk.checked);
+}
+
+// 行のチェック状態と人数を読む共通ヘルパー
+function wRow(chkId, qtyId) {
+  const chk = document.getElementById(chkId);
+  if (!chk || !chk.checked) return null;
+  const raw = parseInt((document.getElementById(qtyId)||{}).value);
+  if (!raw || raw < 1) return 'MISSING';
+  return raw;
+}
+function wSelect(id) {
+  return (document.getElementById(id)||{}).value || '';
+}
+
+function wRefresh() {
+  const isMonthly = document.getElementById('w_monthlyToggle').checked;
+  const mult = isMonthly ? 1.05 : 1.0;
+  const recs = [];
+  const warnings = [];
+
+  // ---- Sales ----
+  const salesQty = wRow('w_sales_chk','w_sales_qty');
+  if (salesQty === 'MISSING') warnings.push('Sales: 人数を入力してください');
+  else if (salesQty) {
+    const plan = wSelect('w_sales_plan');
+    const p = plan==='pro' ? {id:'sales_pro',name:'Sales Professional',price:65} : {id:'sales_ent',name:'Sales Enterprise',price:105};
+    recs.push({icon:'📈', name:p.name, pricePerUnit:p.price, qty:salesQty, unitLabel:'ユーザー/月',
+      totalMonth:p.price*salesQty*mult, licenseId:p.id,
+      reason:`営業・商談管理に必要なライセンスです。${plan==='ent'?'Enterprise はAI・予測スコア等フル機能が利用可能。':'Professional は基本的なCRM機能のみ。'}`});
+  }
+
+  // ---- Customer Service ----
+  const csQty = wRow('w_cs_chk','w_cs_qty');
+  if (csQty === 'MISSING') warnings.push('Customer Service: 人数を入力してください');
+  else if (csQty) {
+    const plan = wSelect('w_cs_plan');
+    const p = plan==='pro' ? {id:'cs_pro',name:'Customer Service Professional',price:50} : {id:'cs_ent',name:'Customer Service Enterprise',price:105};
+    recs.push({icon:'🎧', name:p.name, pricePerUnit:p.price, qty:csQty, unitLabel:'ユーザー/月',
+      totalMonth:p.price*csQty*mult, licenseId:p.id,
+      reason:`カスタマーサポート担当者に必要です。${plan==='ent'?'Enterprise はオムニチャネル対応・高度なルーティングが利用可能。':'Professional は基本ケース管理のみ。'}`});
+  }
+
+  // ---- Field Service ----
+  const fieldQty = wRow('w_field_chk','w_field_qty');
+  if (fieldQty === 'MISSING') warnings.push('Field Service: 人数を入力してください');
+  else if (fieldQty) {
+    recs.push({icon:'🔧', name:'Field Service', pricePerUnit:105, qty:fieldQty, unitLabel:'ユーザー/月',
+      totalMonth:105*fieldQty*mult, licenseId:'field_svc',
+      reason:'現場作業員・スケジューラー向け。作業指示・ルート最適化・IoT連携が利用できます。'});
+  }
+
+  // ---- Finance ----
+  const finQty = wRow('w_finance_chk','w_finance_qty');
+  if (finQty === 'MISSING') warnings.push('Finance: 人数を入力してください');
+  else if (finQty) {
+    if (finQty < 20) warnings.push(`Finance は最低 20 ライセンスが必要です（現在 ${finQty} 名）。`);
+    const qty = Math.max(finQty, 20);
+    recs.push({icon:'💰', name:'Finance', pricePerUnit:180, qty, unitLabel:'ユーザー/月',
+      totalMonth:180*qty*mult, licenseId:'finance',
+      reason:`財務担当者向け。総勘定元帳・原価計算・予算管理・財務報告を一元管理。最低20ライセンス必要のため ${qty} 名で計算。`});
+  }
+
+  // ---- SCM ----
+  const scmQty = wRow('w_scm_chk','w_scm_qty');
+  if (scmQty === 'MISSING') warnings.push('SCM: 人数を入力してください');
+  else if (scmQty) {
+    if (scmQty < 20) warnings.push(`SCM は最低 20 ライセンスが必要です（現在 ${scmQty} 名）。`);
+    const qty = Math.max(scmQty, 20);
+    recs.push({icon:'📦', name:'Supply Chain Management', pricePerUnit:180, qty, unitLabel:'ユーザー/月',
+      totalMonth:180*qty*mult, licenseId:'scm',
+      reason:`在庫・調達・製造・物流担当者向け。最低20ライセンス必要のため ${qty} 名で計算。`});
+  }
+
+  // ---- Project Operations ----
+  const projQty = wRow('w_proj_chk','w_proj_qty');
+  if (projQty === 'MISSING') warnings.push('Project Operations: 人数を入力してください');
+  else if (projQty) {
+    recs.push({icon:'📋', name:'Project Operations', pricePerUnit:120, qty:projQty, unitLabel:'ユーザー/月',
+      totalMonth:120*projQty*mult, licenseId:'proj_ops',
+      reason:'プロジェクトマネージャー・リソース管理者向け。案件・工数・コスト管理を行います。'});
+  }
+
+  // ---- Human Resources ----
+  const hrQty = wRow('w_hr_chk','w_hr_qty');
+  if (hrQty === 'MISSING') warnings.push('Human Resources: 人数を入力してください');
+  else if (hrQty) {
+    recs.push({icon:'🧑‍💼', name:'Human Resources', pricePerUnit:120, qty:hrQty, unitLabel:'ユーザー/月',
+      totalMonth:120*hrQty*mult, licenseId:'hr',
+      reason:'人事担当者向け。採用・人材管理・給与・組織図・勤怠管理を行います。'});
+  }
+
+  // ---- Business Central ----
+  const bcQty = wRow('w_bc_chk','w_bc_qty');
+  if (bcQty === 'MISSING') warnings.push('Business Central: 人数を入力してください');
+  else if (bcQty) {
+    const plan = wSelect('w_bc_plan');
+    const p = plan==='prem' ? {id:'bc_prem',name:'Business Central Premium',price:100} : {id:'bc_ess',name:'Business Central Essentials',price:70};
+    recs.push({icon:'🏪', name:p.name, pricePerUnit:p.price, qty:bcQty, unitLabel:'ユーザー/月',
+      totalMonth:p.price*bcQty*mult, licenseId:p.id,
+      reason:`中小企業向け統合ERP。${plan==='prem'?'Premium はEssentials＋製造管理・サービス管理が含まれます。':'Essentials は財務・在庫・販売・購買の基本機能。'}`});
+  }
+
+  // ---- Power Automate: 承認フロー ----
+  const flowUserQty = wRow('w_flow_user_chk','w_flow_user_qty');
+  if (flowUserQty === 'MISSING') warnings.push('Power Automate Premium: 人数を入力してください');
+  else if (flowUserQty) {
+    recs.push({icon:'🔄', name:'Power Automate Premium', pricePerUnit:15, qty:flowUserQty, unitLabel:'ユーザー/月',
+      totalMonth:15*flowUserQty*mult, licenseId:'flow_prem',
+      reason:'承認フロー・通知・データ連携など、クラウドフローを作成・実行するユーザーに1ライセンス必要です。'});
+  }
+
+  // ---- Power Automate: RPA ----
+  const flowRpaQty = wRow('w_flow_rpa_chk','w_flow_rpa_qty');
+  if (flowRpaQty === 'MISSING') warnings.push('Power Automate Process（RPA）: 台数を入力してください');
+  else if (flowRpaQty) {
+    recs.push({icon:'🤖', name:'Power Automate Process（無人RPA）', pricePerUnit:150, qty:flowRpaQty, unitLabel:'フロー/月',
+      totalMonth:150*flowRpaQty*mult, licenseId:'flow_proc',
+      reason:'人が操作しなくても動く無人RPA。夜間バッチや画面自動操作はフロー数単位で課金されます。'});
+  }
+
+  // ---- Power Apps ----
+  const paQty = wRow('w_pa_chk','w_pa_qty');
+  if (paQty === 'MISSING') warnings.push('Power Apps Premium: 人数を入力してください');
+  else if (paQty) {
+    recs.push({icon:'📱', name:'Power Apps Premium', pricePerUnit:20, qty:paQty, unitLabel:'ユーザー/月',
+      totalMonth:20*paQty*mult, licenseId:'pa_prem',
+      reason:'カスタム業務アプリを使うユーザーに必要。1ライセンスで何本のアプリでも追加費用なし。'});
+  }
+
+  // ---- Power BI ----
+  const pbiQty = wRow('w_pbi_chk','w_pbi_qty');
+  if (pbiQty === 'MISSING') warnings.push('Power BI Pro: 人数を入力してください');
+  else if (pbiQty) {
+    recs.push({icon:'📊', name:'Power BI Pro', pricePerUnit:14, qty:pbiQty, unitLabel:'ユーザー/月',
+      totalMonth:14*pbiQty*mult, licenseId:'pbi_pro',
+      reason:'ダッシュボード・分析レポートを閲覧・共有するユーザーに必要（2025年4月より $14/名に値上げ）。'});
+  }
+
+  // ---- Copilot Studio ----
+  const copilotPacks = wRow('w_copilot_chk','w_copilot_qty');
+  if (copilotPacks === 'MISSING') warnings.push('Copilot Studio: パック数を入力してください');
+  else if (copilotPacks) {
+    recs.push({icon:'🤖', name:'Copilot Studio', pricePerUnit:200, qty:copilotPacks, unitLabel:'25,000クレジット/月',
+      totalMonth:200*copilotPacks*mult, licenseId:'copilot',
+      reason:'AIチャットボット・エージェント構築・実行用。会話数や複雑さによりクレジット消費量が変動します。'});
+  }
+
+  // ---- Customer Insights ----
+  if (document.getElementById('w_ci_chk') && document.getElementById('w_ci_chk').checked) {
+    recs.push({icon:'📣', name:'Customer Insights – Journeys', pricePerUnit:1000, qty:1, unitLabel:'テナント/月',
+      totalMonth:1000*mult, licenseId:'ci_journeys',
+      reason:'メール・SMS・プッシュ通知などマーケティング配信をテナント単位で管理します。'});
+  }
+
+  // ---- Power Pages ----
+  const pagesRaw = wRow('w_pages_chk','w_pages_qty');
+  if (pagesRaw === 'MISSING') warnings.push('Power Pages: MAU数を入力してください');
+  else if (pagesRaw) {
+    const units100 = Math.ceil(pagesRaw / 100);
+    recs.push({icon:'🌐', name:'Power Pages（認証ユーザー）', pricePerUnit:200, qty:units100, unitLabel:'100ユーザー/月',
+      totalMonth:200*units100*mult, licenseId:'pages_auth',
+      reason:`外部ユーザー ${pagesRaw} 名 → 100名単位 ${units100} パック。顧客向けポータルへのログインアクセスに必要。`});
+  }
+
+  // ===== Render =====
+  const totalMonthly = recs.reduce((s,r)=>s+r.totalMonth,0);
+  const totalAnnual = totalMonthly*12;
+  const totalBox = document.getElementById('wiz_total_box');
+  const recList = document.getElementById('wiz_rec_list');
+  const annualRow = document.getElementById('wiz_annual_row');
+  const annualAmt = document.getElementById('wiz_annual_amt');
+  const warnEl = document.getElementById('wiz_warnings');
+  const altEl = document.getElementById('wiz_alt');
+  const transferBtn = document.getElementById('wiz_transfer_btn');
+
+  if (recs.length === 0) {
+    totalBox.style.display='none'; annualRow.style.display='none';
+    altEl.style.display='none'; transferBtn.style.display='none';
+    recList.innerHTML=`<div class="rec-empty"><div class="rec-empty-icon">🎯</div><div>業務内容を入力すると<br>最適なライセンスを提案します</div></div>`;
+    warnEl.innerHTML=''; return;
+  }
+
+  totalBox.style.display='block';
+  document.getElementById('wiz_total_lbl').textContent = isMonthly?'月額合計（月払い +5%）':'月額合計（年払い）';
+  document.getElementById('wiz_total_amt').textContent = fmtWi(totalMonthly);
+  document.getElementById('wiz_total_sub').textContent = `年額換算: ${fmtWi(totalAnnual)}`;
+  annualRow.style.display='flex';
+  annualAmt.textContent = fmtWi(totalAnnual)+'/年';
+  transferBtn.style.display='flex';
+
+  recList.innerHTML = recs.map(r=>`
+    <div class="rec-item">
+      <div class="rec-item-hdr">
+        <span class="rec-item-icon">${r.icon}</span>
+        <div style="flex:1">
+          <div class="rec-item-name">${r.name}</div>
+          <div class="rec-item-qty">${r.qty} ${r.unitLabel} × ${fmtW(r.pricePerUnit)}</div>
+        </div>
+        <div class="rec-item-price">${fmtWi(r.totalMonth)}<span style="font-size:10px;color:var(--gray-600)">/月</span></div>
+      </div>
+      <div class="rec-item-reason">💡 ${r.reason}</div>
+    </div>`).join('');
+
+  warnEl.innerHTML = warnings.map(w=>`<div class="warn-box">⚠️ <span>${w}</span></div>`).join('');
+
+  // 代替プランの比較
+  const altItems = [];
+  const salesEntRec = recs.find(r=>r.licenseId==='sales_ent');
+  const csEntRec    = recs.find(r=>r.licenseId==='cs_ent');
+  if (salesEntRec) {
+    const diff = (105-65)*salesEntRec.qty*mult;
+    altItems.push({name:`Sales Professional に変更（${salesEntRec.qty}名）`, cost:totalMonthly-diff});
+  }
+  if (csEntRec) {
+    const diff = (105-50)*csEntRec.qty*mult;
+    altItems.push({name:`CS Professional に変更（${csEntRec.qty}名）`, cost:totalMonthly-diff});
+  }
+  if (altItems.length>0) {
+    altEl.style.display='block';
+    document.getElementById('wiz_alt_list').innerHTML = altItems.map(a=>
+      `<div class="alt-row"><span class="alt-row-name">${a.name}</span><span class="alt-row-cost">${fmtWi(a.cost)}/月</span></div>`
+    ).join('');
+  } else { altEl.style.display='none'; }
+
+  window._wizRecs = recs;
+}
+
+function wReset() {
+  if(!confirm('リセットしますか？'))return;
+  // STEP1のチェックをすべて外す
+  ['w_sales_chk','w_cs_chk','w_field_chk','w_finance_chk','w_scm_chk','w_proj_chk','w_hr_chk','w_bc_chk',
+   'w_flow_user_chk','w_flow_rpa_chk','w_pa_chk','w_pbi_chk','w_copilot_chk','w_ci_chk','w_pages_chk'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.checked=false;
+  });
+  // 行のenabledをリセット
+  document.querySelectorAll('.usage-row').forEach(r=>r.classList.remove('enabled'));
+  // プラン選択をデフォルトに
+  ['w_sales_plan','w_cs_plan','w_bc_plan'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value=el.options[0].value;
+  });
+  wRefresh();
+}
+
+// =====================================================
+// POWER APPS LICENSE DIAGNOSIS
+// =====================================================
+function togglePaDiag() {
+  const body = document.getElementById('pa_diag_body');
+  const toggle = document.getElementById('pa_diag_toggle');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.classList.toggle('open', !isOpen);
+  if (!isOpen) paDiagChange(); // 初回展開時に判定を実行
+}
+
+function paDiagChange() {
+  const get = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value;
+  const loc   = get('pa_loc');
+  const type  = get('pa_type');
+  const data  = get('pa_data');
+  const m365  = get('pa_m365');
+  const d365  = get('pa_d365');
+  const scope = get('pa_scope');
+
+  // Q6（スコープ）はD365 Entのときのみ表示
+  document.getElementById('pa_scope_block').style.display = d365 === 'ent' ? 'block' : 'none';
+
+  // ラジオの選択済みスタイル更新
+  document.querySelectorAll('.pa-radio').forEach(el => {
+    el.classList.toggle('pa-checked', el.querySelector('input')?.checked);
+  });
+
+  // 判定フロー
+  let verdict = null;
+
+  // ── Rule 1: Teams内 ＋ 標準コネクタ or Dataverse for Teams
+  if (loc === 'teams' && (data === 'standard' || data === 'dvt')) {
+    verdict = {
+      type: 'ok',
+      title: '✅ 追加ライセンス不要',
+      badge: { text: 'M365 / Teams ライセンスに含まれる', color: '#107c10' },
+      reason: 'Teams 内アプリで標準コネクタ（または Dataverse for Teams）のみ使用する場合は、M365 / Teams ライセンスのみで利用可能です。Power Apps の追加ライセンスは不要です。',
+      flow: ['Teams内アプリ', '標準コネクタ', '→ 追加不要 ✅'],
+    };
+  }
+  // ── Rule 2: M365あり ＋ 標準コネクタのみ ＋ Teams外キャンバスアプリ
+  else if (m365 === 'yes' && data === 'standard' && type === 'canvas') {
+    verdict = {
+      type: 'ok',
+      title: '✅ 追加ライセンス不要',
+      badge: { text: 'M365 ライセンスに含まれる（Power Apps Basic）', color: '#107c10' },
+      reason: 'M365 ライセンスには「Power Apps（M365向け）」が含まれており、標準コネクタのみ使用するキャンバスアプリであれば追加購入は不要です。ただし Dataverse・プレミアムコネクタは使用できません。',
+      flow: ['Teams外', 'M365あり', '標準コネクタ', 'キャンバスアプリ', '→ 追加不要 ✅'],
+    };
+  }
+  // ── Rule 3: D365 Enterprise/Premium ＋ 同一環境・同スコープ
+  else if (d365 === 'ent' && scope === 'same') {
+    verdict = {
+      type: 'ok',
+      title: '✅ 追加ライセンス不要（シーデッド権）',
+      badge: { text: 'D365 Enterprise シーデッド権に含まれる', color: '#107c10' },
+      reason: 'D365 Enterprise / Premium ライセンスには「シーデッドPower Apps権」が付帯しています。同一の Dataverse 環境内で、その D365 製品に関連する業務アプリを作成・利用する場合は追加ライセンス不要です。<br><br>対象製品：Sales Ent・CS Ent・Field Service・Finance・SCM・Project Operations・Human Resources・Commerce など',
+      flow: ['D365 Enterprise/Premium', '同一環境・同スコープ', '→ シーデッド権 ✅'],
+      caution: '⚠️ シーデッド権の適用範囲はマイクロソフトのライセンスガイドで定義されています。複雑なケースは営業担当に確認することを推奨します。',
+    };
+  }
+  // ── Rule 4: D365 Pro → シーデッドなし
+  else if (d365 === 'pro') {
+    verdict = {
+      type: 'ng',
+      title: '❌ Power Apps Premium ライセンスが必要',
+      reason: 'D365 Professional（Sales Pro / Customer Service Pro 等）にはシーデッドの Power Apps 権利が含まれていません。Power Apps を使用するには別途 Power Apps Premium ライセンスが必要です。',
+      flow: ['D365 Professional', '→ シーデッドなし', '→ Premium 必要 ❌'],
+      price: '$20 / ユーザー / 月',
+      tip: '💡 D365 Enterprise にアップグレードすると、同スコープ内のアプリについてシーデッド権が付与されます。',
+    };
+  }
+  // ── Rule 5: D365 Ent/Prem ＋ 別スコープ/別環境
+  else if (d365 === 'ent' && scope === 'diff') {
+    verdict = {
+      type: 'ng',
+      title: '❌ Power Apps Premium ライセンスが必要',
+      reason: 'D365 Enterprise のシーデッド権は「同一環境・同一スコープ」のアプリに限定されます。D365 とは無関係の業務アプリや別の Dataverse 環境を利用する場合は、Power Apps Premium が別途必要です。',
+      flow: ['D365 Enterprise', '別スコープ/別環境', '→ シーデッド対象外', '→ Premium 必要 ❌'],
+      price: '$20 / ユーザー / 月',
+    };
+  }
+  // ── Rule 6: モデル駆動型
+  else if (type === 'model') {
+    verdict = {
+      type: 'ng',
+      title: '❌ Power Apps Premium ライセンスが必要',
+      reason: 'モデル駆動型アプリは Dataverse（フル版）が必須であるため、Power Apps Premium ライセンスが必要です。',
+      flow: ['モデル駆動型アプリ', '→ Dataverse必須', '→ Premium 必要 ❌'],
+      price: '$20 / ユーザー / 月',
+    };
+  }
+  // ── Rule 7: Dataverse フル版
+  else if (data === 'dv') {
+    verdict = {
+      type: 'ng',
+      title: '❌ Power Apps Premium ライセンスが必要',
+      reason: 'Dataverse（フル版）を使用する場合は Power Apps Premium ライセンスが必要です。',
+      flow: ['Dataverse（フル版）', '→ Premium 必要 ❌'],
+      price: '$20 / ユーザー / 月',
+      tip: '💡 Teams 内のみで利用する場合は Dataverse for Teams（ライセンス不要）で代替できる場合があります。',
+    };
+  }
+  // ── Rule 8: プレミアムコネクタ
+  else if (data === 'premium') {
+    verdict = {
+      type: 'ng',
+      title: '❌ Power Apps Premium ライセンスが必要',
+      reason: 'SAP・Salesforce・SQL Server・Azure Functions・カスタム API などのプレミアムコネクタを使用する場合は、Power Apps Premium ライセンスが必要です。',
+      flow: ['プレミアムコネクタ', '→ Premium 必要 ❌'],
+      price: '$20 / ユーザー / 月',
+    };
+  }
+  // ── Default（選択肢未完了など）
+  else {
+    verdict = {
+      type: 'warn',
+      title: '⚠️ 条件を確認中...',
+      reason: 'すべての条件を選択すると判定結果が表示されます。',
+      flow: [],
+    };
+  }
+
+  // ===== 結果描画 =====
+  const el = document.getElementById('pa_verdict');
+  const cls = verdict.type === 'ok' ? 'pa-verdict-ok' : verdict.type === 'ng' ? 'pa-verdict-ng' : 'pa-verdict-warn';
+
+  const flowHtml = verdict.flow?.length
+    ? `<div class="pa-flow-line" style="margin-bottom:10px">
+        ${verdict.flow.map((f,i) => `
+          ${i>0?'<span class="pa-flow-arrow">→</span>':''}
+          <span class="${f.includes('✅')||f.includes('❌')?'pa-flow-active':''}">${f}</span>`).join('')}
+       </div>` : '';
+
+  const badgeHtml = verdict.badge
+    ? `<div class="pa-v-badge" style="background:${verdict.badge.color};color:#fff">${verdict.badge.text}</div><br>` : '';
+
+  const priceHtml = verdict.price
+    ? `<div class="pa-v-price">→ 必要なライセンス：Power Apps Premium &nbsp;<strong>${verdict.price}</strong></div>` : '';
+
+  const tipHtml = verdict.tip
+    ? `<div style="margin-top:8px;font-size:12px;color:var(--primary);background:var(--primary-light);border-radius:4px;padding:7px 10px">${verdict.tip}</div>` : '';
+
+  const cautionHtml = verdict.caution
+    ? `<div style="margin-top:8px;font-size:12px;color:var(--warning);background:var(--warning-bg);border-radius:4px;padding:7px 10px">${verdict.caution}</div>` : '';
+
+  el.innerHTML = `
+    <div class="${cls}">
+      <div class="pa-v-title">${verdict.title}</div>
+      ${badgeHtml}
+      ${flowHtml}
+      <div class="pa-v-reason">${verdict.reason}</div>
+      ${priceHtml}
+      ${tipHtml}
+      ${cautionHtml}
+    </div>`;
+}
+
+function copyWizResult() {
+  const total = document.getElementById('wiz_total_amt').textContent;
+  const annual = document.getElementById('wiz_annual_amt').textContent;
+  const recs = window._wizRecs || [];
+  const lines = recs.map(r => `  ${r.name}: ${fmtWi(r.totalMonth)}/月 (${r.qty} ${r.unitLabel})`).join('\n');
+  const text = `Dynamics 365 / Power Platform ライセンス費用見積もり\n${'='.repeat(40)}\n月額合計: ${total}\n年額合計: ${annual}\n\n【推奨ライセンス一覧】\n${lines}\n\n※ 価格は参考値です。計算日: ${new Date().toLocaleDateString('ja-JP')}`;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  alert('クリップボードにコピーしました！');
+}
+
+// Transfer wizard result to detail tab
+function transferToDetail() {
+  switchTabByName('detail');
+  dGroups = [];
+  dGroupIdCounter = 0;
+  const recs = window._wizRecs || [];
+
+  // D365製品はそれぞれ独立したグループとして転送（ウィザードでは行ごとに別ユーザー）
+  recs.forEach(r => {
+    if (D365.some(d => d.id === r.licenseId)) {
+      dGroups.push({id: ++dGroupIdCounter, users: r.qty, selected: [r.licenseId]});
+    }
+  });
+
+  // グループが1つもなければ空グループを追加
+  if (dGroups.length === 0) dGroups.push({id: ++dGroupIdCounter, users: 10, selected: []});
+
+  dRenderGroups();
+
+  // BC・Power Platform 等の数量をセット
+  recs.forEach(r => {
+    if (D365.some(d => d.id === r.licenseId)) return; // D365はグループで処理済み
+    const inp = document.getElementById('dqty-' + r.licenseId);
+    if (inp) { inp.value = r.qty; dQty[r.licenseId] = r.qty; dUpdateCardActive(r.licenseId, r.qty > 0); }
+  });
+
+  dRecalc();
+  alert('詳細計算タブに転送しました！\n※同じユーザーが複数の D365 製品を使う場合は、グループを統合してアタッチ計算ができます。');
+}
+
+function switchTabByName(id) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    if(b.textContent.includes(id==='wizard'?'かんたん':'詳細')) b.classList.add('active');
+  });
+}
+
+// =====================================================
+// =====================================================
+// DETAIL TAB LOGIC
+// =====================================================
+// =====================================================
+let dGroups = [];
+let dGroupIdCounter = 0;
+let dQty = {};
+let dSiteQty = {};
+
+window.onload = () => {
+  dInitGrids();
+  dAddGroup();
+  dRecalc();
+  wRefresh();
+};
+
+function dOnCurrChange() {
+  document.getElementById('d_rateGroup').style.display = document.getElementById('d_currToggle').checked ? 'flex' : 'none';
+  dRecalc();
+}
+
+// ---- Groups ----
+function dAddGroup() {
+  dGroups.push({id: ++dGroupIdCounter, users:10, selected:[]});
+  dRenderGroups();
+  dRecalc();
+}
+function dRemoveGroup(id) {
+  dGroups = dGroups.filter(g=>g.id!==id);
+  dRenderGroups();
+  dRecalc();
+}
+function dRenderGroups() {
+  const c = document.getElementById('d_groupContainer');
+  c.innerHTML = '';
+  dGroups.forEach((g,i) => dRenderGroupCard(g, i+1, c));
+}
+
+function dRenderGroupCard(group, num, container) {
+  const cats = [...new Set(D365.map(p=>p.cat))];
+  let prodsHtml = '';
+  cats.forEach(cat => {
+    const prods = D365.filter(p=>p.cat===cat);
+    prodsHtml += `<div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--primary);margin-top:6px;padding-bottom:3px;border-bottom:1px solid var(--primary-light)">${cat}</div>`;
+    prods.forEach(p => {
+      const sel = group.selected.includes(p.id);
+      prodsHtml += `<div class="grp-prod-item ${sel?'selected':''}" id="dgpi-${group.id}-${p.id}" onclick="dToggleGrpProd(${group.id},'${p.id}')">
+        <input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();dToggleGrpProd(${group.id},'${p.id}')">
+        <span class="grp-prod-name">${p.name}${p.note?`<br><span style='font-size:10px;color:var(--gray-600)'>${p.note}</span>`:''}</span>
+        <span class="grp-prod-price" id="dgprice-${group.id}-${p.id}">$${p.price}</span>
+      </div>`;
+    });
+  });
+
+  const div = document.createElement('div');
+  div.className = 'grp-card'; div.id = 'dgrp-'+group.id;
+  div.innerHTML = `
+    <div class="grp-hdr">
+      <div class="grp-num">${num}</div>
+      <div class="grp-title">ユーザーグループ ${num}</div>
+      ${dGroups.length>1?`<button class="btn-del-grp" onclick="dRemoveGroup(${group.id})">✕</button>`:''}
+    </div>
+    <div class="grp-users-row">
+      <label>👤 ユーザー数：</label>
+      <input type="number" class="qty-in" id="dgusers-${group.id}" value="${group.users}" min="1" style="width:75px"
+        onchange="dUpdateGrpUsers(${group.id},this.value)">
+      <span style="font-size:13px">名</span>
+    </div>
+    <div class="grp-prods">${prodsHtml}</div>
+    <div class="grp-summary" id="dgsummary-${group.id}"></div>`;
+  container.appendChild(div);
+  dUpdateGrpSummary(group.id);
+}
+
+function dUpdateGrpUsers(id, val) {
+  const g = dGroups.find(g=>g.id===id);
+  if(g){ g.users = Math.max(1,parseInt(val)||1); dUpdateGrpSummary(id); dRecalc(); }
+}
+
+function dToggleGrpProd(groupId, productId) {
+  const g = dGroups.find(g=>g.id===groupId);
+  if(!g) return;
+  const idx = g.selected.indexOf(productId);
+  if(idx===-1) g.selected.push(productId); else g.selected.splice(idx,1);
+  const item = document.getElementById(`dgpi-${groupId}-${productId}`);
+  if(item){ item.classList.toggle('selected', g.selected.includes(productId)); item.querySelector('input').checked = g.selected.includes(productId); }
+  dUpdateGrpSummary(groupId);
+  dUpdateGrpPriceLabels(groupId);
+  dRecalc();
+}
+
+function dCalcGrpCost(group) {
+  if(!group.selected.length) return {items:[],total:0};
+  const sel = D365.filter(p=>group.selected.includes(p.id)).sort((a,b)=>b.price-a.price);
+  const items = sel.map((p,i)=>({...p, pricePerUser: i===0?p.price:(p.attach!==null?p.attach:p.price), isBase:i===0}));
+  return {items, total: items.reduce((s,it)=>s+it.pricePerUser*group.users,0)};
+}
+
+function dUpdateGrpSummary(groupId) {
+  const g = dGroups.find(g=>g.id===groupId);
+  const el = document.getElementById(`dgsummary-${groupId}`);
+  if(!g||!el) return;
+  if(!g.selected.length){ el.innerHTML='<span style="color:var(--gray-600)">製品が未選択です。上から製品を選んでください。</span>'; return; }
+  const {items,total} = dCalcGrpCost(g);
+  let html = items.map(it=>`<div style="display:flex;justify-content:space-between;margin-bottom:2px;font-size:12px">
+    <span>${it.isBase?'<span class="base-tag">ベース</span>':'<span class="attach-tag">アタッチ</span>'} ${it.name}</span>
+    <span>${fmtD(it.pricePerUser)}/ユーザー</span></div>`).join('');
+  html += `<div class="grp-summary-total" style="margin-top:6px">合計: ${g.users}名 × ${fmtD(items.reduce((s,i)=>s+i.pricePerUser,0))}/名 = <span style="color:var(--primary)">${fmtDi(total)}/月</span></div>`;
+  el.innerHTML = html;
+}
+
+function dUpdateGrpPriceLabels(groupId) {
+  const g = dGroups.find(g=>g.id===groupId);
+  if(!g) return;
+  const selected = D365.filter(p=>g.selected.includes(p.id)).sort((a,b)=>b.price-a.price);
+  D365.forEach(p => {
+    const el = document.getElementById(`dgprice-${groupId}-${p.id}`);
+    if(!el) return;
+    const si = selected.findIndex(s=>s.id===p.id);
+    if(si===-1){ el.textContent=`$${p.price}`; el.style.color=''; el.style.fontWeight=''; }
+    else if(si===0){ el.textContent=`$${p.price} (ベース)`; el.style.color='var(--primary)'; el.style.fontWeight='700'; }
+    else { el.textContent=`$${p.attach!==null?p.attach:p.price} (アタッチ)`; el.style.color='var(--success)'; el.style.fontWeight=''; }
+  });
+}
+
+// ---- Simple grids ----
+function dInitGrids() {
+  dMakeGrid(BC, 'd_grid-bc', (p)=>`
+    <div class="prod-card" id="dcard-${p.id}">
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-price"><strong>${fmtD(p.price)}</strong> / ユーザー/月</div>
+      ${p.note?`<div class="prod-note">${p.note}</div>`:''}
+      <div class="qty-row"><label>ユーザー数</label>
+      <input type="number" class="qty-in" id="dqty-${p.id}" value="0" min="0"
+        onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
+      <label>名</label></div></div>`);
+
+  dMakeGrid(PA, 'd_grid-pa', (p) => {
+    if(p.unitKey==='user-app') return `
+      <div class="prod-card" id="dcard-${p.id}">
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-price"><strong>${fmtD(p.price)}</strong> / ${p.unit}</div>
+        ${p.note?`<div class="prod-note">${p.note}</div>`:''}
+        <div class="qty-row"><label>ユーザー</label>
+        <input type="number" class="qty-sm" id="dqty-${p.id}" value="0" min="0"
+          onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
+        <label>名 × アプリ</label>
+        <input type="number" class="qty-sm" id="dapps-${p.id}" value="1" min="1"
+          onchange="dQty['${p.id}+'_apps']=Math.max(1,parseInt(this.value)||1);dRecalc()">
+        <label>本</label></div></div>`;
+    return `
+      <div class="prod-card" id="dcard-${p.id}">
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-price"><strong>${fmtD(p.price)}</strong> / ${p.unit}</div>
+        ${p.note?`<div class="prod-note">${p.note}</div>`:''}
+        <div class="qty-row"><label>ユーザー数</label>
+        <input type="number" class="qty-in" id="dqty-${p.id}" value="0" min="0"
+          onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
+        <label>名</label></div></div>`;
+  });
+
+  dMakeGrid(FLOW, 'd_grid-flow', (p) => `
+    <div class="prod-card" id="dcard-${p.id}">
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-price"><strong>${fmtD(p.price)}</strong> / ${p.unit}</div>
+      ${p.note?`<div class="prod-note">${p.note}</div>`:''}
+      <div class="qty-row"><label>${p.unitKey==='flow'?'フロー数':'ユーザー数'}</label>
+      <input type="number" class="qty-in" id="dqty-${p.id}" value="0" min="0"
+        onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
+      <label>${p.unitKey==='flow'?'本':'名'}</label></div></div>`);
+
+  dMakeGrid(PBI, 'd_grid-pbi', (p) => `
+    <div class="prod-card" id="dcard-${p.id}">
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-price"><strong>${fmtD(p.price)}</strong> / ${p.unit}</div>
+      ${p.note?`<div class="prod-note">${p.note}</div>`:''}
+      <div class="qty-row"><label>ユーザー数</label>
+      <input type="number" class="qty-in" id="dqty-${p.id}" value="0" min="0"
+        onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
+      <label>名</label></div></div>`);
+
+  // Tenant
+  const tGrid = document.getElementById('d_grid-tenant');
+  tGrid.innerHTML = '';
+  TENANT.forEach(p => {
+    dQty[p.id] = 0;
+    let qtyHtml = '';
+    if(p.unitKey==='pagesAuth'||p.unitKey==='pagesAnon') {
+      dSiteQty[p.id] = 1;
+      const ul = p.unitKey==='pagesAuth'?'100ユーザー単位':'1,000セッション単位';
+      qtyHtml = `<div class="qty-row" style="flex-wrap:wrap;gap:5px"><label>${ul}</label>
+        <input type="number" class="qty-in" id="dqty-${p.id}" value="0" min="0"
+          onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
+        <label>× サイト数</label>
+        <input type="number" class="qty-sm" id="dsites-${p.id}" value="1" min="1"
+          onchange="dSiteQty['${p.id}']=Math.max(1,parseInt(this.value)||1);dRecalc()">
+        <label>サイト</label></div>`;
+    } else if(p.unitKey==='credits') {
+      qtyHtml = `<div class="qty-row"><label>25,000クレジット単位</label>
+        <input type="number" class="qty-in" id="dqty-${p.id}" value="0" min="0"
+          onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
+        <label>パック</label></div>`;
+    } else {
+      qtyHtml = `<div class="qty-row"><label>テナント数</label>
+        <input type="number" class="qty-in" id="dqty-${p.id}" value="0" min="0" max="5"
+          onchange="dQty['${p.id}']=Math.max(0,parseInt(this.value)||0);dUpdateCardActive('${p.id}',dQty['${p.id}']>0);dRecalc()">
+        <label>（通常は1）</label></div>`;
+    }
+    const card = document.createElement('div');
+    card.className='prod-card'; card.id='dcard-'+p.id;
+    card.innerHTML=`<div class="prod-name">${p.name}</div>
+      <div class="prod-price"><strong>${fmtD(p.price)}</strong> / ${p.unit}</div>
+      ${p.note?`<div class="prod-note">${p.note}</div>`:''}${qtyHtml}`;
+    tGrid.appendChild(card);
+  });
+}
+
+function dMakeGrid(prods, gridId, tplFn) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  prods.forEach(p => { dQty[p.id]=0; grid.insertAdjacentHTML('beforeend', tplFn(p)); });
+}
+
+function dUpdateCardActive(id, active) {
+  const c = document.getElementById('dcard-'+id);
+  if(c) c.classList.toggle('active', active);
+}
+
+// ---- Recalculate ----
+function dRecalc() {
+  // Re-render prices if currency changed
+  document.querySelectorAll('.prod-price strong').forEach(el => {
+    // prices are static text - just update via re-init on currency change
+  });
+
+  const isMonthly = document.getElementById('d_monthlyToggle').checked;
+  const mult = isMonthly ? 1.05 : 1.0;
+  const lineItems = [];
+  const warnings = [];
+  let totalUsers = 0;
+
+  // Groups
+  dGroups.forEach((g,i) => {
+    if(!g.selected.length) return;
+    const {items,total} = dCalcGrpCost(g);
+    totalUsers += g.users;
+    const desc = items.map(it=>`${it.isBase?'▶':'└'} ${it.name} ${fmtD(it.pricePerUser)}`).join('<br>');
+    lineItems.push({name:`D365 グループ${i+1} (${g.users}名)`, detail:desc, cost:total*mult});
+    items.forEach(it => { if(it.minQty&&g.users<it.minQty) warnings.push(`<strong>${it.name}</strong> は最低 ${it.minQty} ライセンスが必要です（現在: ${g.users} 名）`); });
+    dUpdateGrpSummary(g.id);
+  });
+
+  // BC
+  BC.forEach(p => { const q=dQty[p.id]||0; if(!q)return; totalUsers+=q; lineItems.push({name:p.name,detail:`${q}名 × ${fmtD(p.price)}/月`,cost:p.price*q*mult}); });
+
+  // PA
+  PA.forEach(p => {
+    const q=dQty[p.id]||0; if(!q)return;
+    if(p.unitKey==='user-app'){
+      const apps=Math.max(1,parseInt((document.getElementById(`dapps-${p.id}`)||{}).value)||1);
+      lineItems.push({name:p.name,detail:`${q}名 × ${apps}アプリ × ${fmtD(p.price)}/月`,cost:p.price*q*apps*mult});
+    } else { totalUsers+=q; lineItems.push({name:p.name,detail:`${q}名 × ${fmtD(p.price)}/月`,cost:p.price*q*mult}); }
+  });
+
+  // FLOW
+  FLOW.forEach(p => {
+    const q=dQty[p.id]||0; if(!q)return;
+    if(p.unitKey==='flow') lineItems.push({name:p.name,detail:`${q}フロー × ${fmtD(p.price)}/月`,cost:p.price*q*mult});
+    else { totalUsers+=q; lineItems.push({name:p.name,detail:`${q}名 × ${fmtD(p.price)}/月`,cost:p.price*q*mult}); }
+  });
+
+  // PBI
+  PBI.forEach(p => { const q=dQty[p.id]||0; if(!q)return; totalUsers+=q; lineItems.push({name:p.name,detail:`${q}名 × ${fmtD(p.price)}/月`,cost:p.price*q*mult}); });
+
+  // TENANT
+  TENANT.forEach(p => {
+    const q=dQty[p.id]||0; if(!q)return;
+    if(p.unitKey==='pagesAuth'||p.unitKey==='pagesAnon'){
+      const sites=dSiteQty[p.id]||1;
+      const ul=p.unitKey==='pagesAuth'?`${q*100}ユーザー`:`${q*1000}セッション`;
+      lineItems.push({name:p.name,detail:`${ul} × ${sites}サイト × ${fmtD(p.price)}/単位`,cost:p.price*q*sites*mult});
+    } else if(p.unitKey==='credits'){
+      lineItems.push({name:p.name,detail:`${q}パック × ${fmtD(p.price)}/パック`,cost:p.price*q*mult});
+    } else {
+      lineItems.push({name:p.name,detail:`テナント ${q} × ${fmtD(p.price)}/月`,cost:p.price*q*mult});
+    }
+  });
+
+  const totalMonthly = lineItems.reduce((s,l)=>s+l.cost,0);
+  const totalAnnual = totalMonthly*12;
+
+  document.getElementById('d_totalLbl').textContent = isMonthly?'月額合計（月払い +5%）':'月額合計（年払い）';
+  document.getElementById('d_totalAmt').textContent = fmtDi(totalMonthly);
+  document.getElementById('d_totalSub').textContent = totalUsers>0?`累計ユーザー数目安: 約${totalUsers}名`:'';
+
+  const annualRow = document.getElementById('d_annualRow');
+  annualRow.style.display = lineItems.length?'flex':'none';
+  document.getElementById('d_annualAmt').textContent = fmtDi(totalAnnual)+'/年';
+
+  const bl = document.getElementById('d_breakdownList');
+  bl.innerHTML = lineItems.length
+    ? lineItems.map(l=>`<div class="bk-item"><div><div class="bk-name">${l.name}</div><div class="bk-detail">${l.detail}</div></div><div class="bk-cost">${fmtDi(l.cost)}<span style="font-size:10px;color:var(--gray-600)">/月</span></div></div>`).join('')
+    : `<div class="bk-empty"><div class="bk-empty-icon">🛒</div><div>製品を選択してください</div></div>`;
+
+  const warnEl = document.getElementById('d_warnings');
+  const warnItems = [...warnings, isMonthly?'💡 年払いに変更すると約5%お得になります。':''].filter(Boolean);
+  warnEl.innerHTML = warnItems.map(w=>`<div class="warn-box">⚠️ <span>${w}</span></div>`).join('');
+}
+
+function dReset() {
+  if(!confirm('すべての入力をリセットしますか？'))return;
+  dGroups=[]; dGroupIdCounter=0;
+  Object.keys(dQty).forEach(k=>dQty[k]=0);
+  Object.keys(dSiteQty).forEach(k=>dSiteQty[k]=1);
+  dInitGrids();
+  dAddGroup();
+  dRecalc();
+}
+
+function dCopyResult() {
+  const total=document.getElementById('d_totalAmt').textContent;
+  const annual=document.getElementById('d_annualAmt').textContent;
+  const items=[...document.querySelectorAll('.bk-item')].map(el=>`  ${el.querySelector('.bk-name').textContent}: ${el.querySelector('.bk-cost').textContent}`).join('\n');
+  const text=`Dynamics 365 / Power Platform ライセンス費用見積もり\n${'='.repeat(40)}\n月額合計: ${total}\n年額合計: ${annual}\n\n【製品別内訳】\n${items}\n\n※ 価格は参考値です。計算日: ${new Date().toLocaleDateString('ja-JP')}`;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  alert('クリップボードにコピーしました！');
+}
+</script>
+</body>
+</html>
