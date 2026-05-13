@@ -249,12 +249,13 @@ input[type=number]:focus,select:focus{border-color:var(--primary)}
 
   .result-panel,.rec-panel{position:static}
 
-  /* Usage rows: stack vertically on small screens */
-  .usage-row{flex-wrap:wrap;gap:6px;padding:10px}
-  .usage-row label[style]{font-size:12px}
-  .usage-row select{font-size:12px;padding:4px 6px;max-width:160px}
-  .usage-row-qty{flex-wrap:wrap}
-  .usage-row-qty input{width:56px}
+  /* Usage rows: 3-line layout on mobile */
+  .usage-row{flex-wrap:wrap;align-items:flex-start;gap:0;padding:10px;row-gap:6px}
+  .usage-row-check{margin-top:3px;flex-shrink:0}
+  .usage-row > label{flex:1;min-width:0} /* row 1+2: checkbox + title/detail */
+  .usage-row > select{width:calc(100% - 26px);margin-left:26px;font-size:13px;padding:5px 8px;order:3} /* row 3: plan select */
+  .usage-row-qty{width:100%;padding-left:26px;margin-top:0;order:4;font-size:13px} /* row 4: qty */
+  .usage-row-qty input{width:70px;font-size:14px;padding:5px 8px}
 
   /* Prod grid: single column */
   .prod-grid{grid-template-columns:1fr}
