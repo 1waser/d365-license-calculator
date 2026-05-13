@@ -227,6 +227,51 @@ input[type=number]:focus,select:focus{border-color:var(--primary)}
 
 @media print{.app-header{background:#0078d4!important;-webkit-print-color-adjust:exact}.btn{display:none}.result-panel,.rec-panel{position:static}.two-col,.wizard-wrap{display:block}}
 
+/* ===== MOBILE ===== */
+@media(max-width:768px){
+  .app-header{padding:14px 16px}
+  .app-header h1{font-size:16px}
+  .app-header p{font-size:12px}
+  .header-meta{gap:6px;margin-top:8px}
+  .header-badge{font-size:10px;padding:2px 8px}
+
+  .tab-bar{padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tab-bar::-webkit-scrollbar{display:none}
+  .tab-btn{padding:12px 14px;font-size:13px;white-space:nowrap;flex-shrink:0}
+
+  .page-wrap{padding:12px 10px}
+
+  .controls-bar{gap:12px;padding:10px 12px}
+  .ctrl-group{flex-wrap:wrap;gap:6px}
+
+  .two-col{grid-template-columns:1fr}
+  .wizard-wrap{grid-template-columns:1fr}
+
+  .result-panel,.rec-panel{position:static}
+
+  /* Usage rows: stack vertically on small screens */
+  .usage-row{flex-wrap:wrap;gap:6px;padding:10px}
+  .usage-row label[style]{font-size:12px}
+  .usage-row select{font-size:12px;padding:4px 6px;max-width:160px}
+  .usage-row-qty{flex-wrap:wrap}
+  .usage-row-qty input{width:56px}
+
+  /* Prod grid: single column */
+  .prod-grid{grid-template-columns:1fr}
+  .grp-prods{grid-template-columns:1fr}
+
+  /* Buttons */
+  .action-row{flex-direction:column}
+  .action-row .btn{width:100%;justify-content:center}
+
+  .total-amt{font-size:22px}
+  .rec-total-amt{font-size:22px}
+
+  /* PA diagnosis flow line wrap */
+  .pa-flow-line{gap:4px}
+  .pa-flow-arrow{margin:0 2px}
+}
+
 /* ===== Power Apps Diagnosis ===== */
 .pa-diag-body{padding:18px 20px}
 .pa-q-block{margin-bottom:16px}
